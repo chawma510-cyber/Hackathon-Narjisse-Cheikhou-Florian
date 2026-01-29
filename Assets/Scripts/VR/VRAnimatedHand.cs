@@ -121,38 +121,38 @@ namespace HackathonVR
             spawnedHand = new GameObject("ProceduralHand");
             spawnedHand.transform.SetParent(transform);
             spawnedHand.transform.localPosition = Vector3.zero;
+            spawnedHand.transform.localRotation = Quaternion.identity; // Align with controller Z-forward
             
-            // Rotate hand to correct orientation - palm down, fingers pointing forward
-            // Left hand needs to be mirrored
+            // Mirror factor for Left/Right
             float mirror = handSide == HandSide.Left ? -1f : 1f;
-            spawnedHand.transform.localRotation = Quaternion.Euler(proceduralRotationOffset);
-            
-            // Palm - flat box
+
+            // Palm - flat box positioned slightly forward from wrist
             var palm = GameObject.CreatePrimitive(PrimitiveType.Cube);
             palm.name = "Palm";
             palm.transform.SetParent(spawnedHand.transform);
-            palm.transform.localPosition = new Vector3(0, 0, -0.02f);
-            palm.transform.localScale = new Vector3(0.08f * mirror, 0.025f, 0.1f);
+            // Center of palm at Z = 0.05
+            palm.transform.localPosition = new Vector3(0, 0, 0.04f); 
+            palm.transform.localScale = new Vector3(0.08f, 0.02f, 0.09f);
             palm.transform.localRotation = Quaternion.identity;
             Destroy(palm.GetComponent<Collider>());
             SetHandMaterial(palm);
             
-            // Finger positions (X offset from center, Z offset from palm)
-            // Order: Thumb, Index, Middle, Ring, Pinky
-            // Corrected for Palm Down: Thumb should be Left (-X) for Right Hand, Right (+X) for Left Hand
-            // Since mirror is 1 for Right, we negate the values to put Thumb on Left (-0.045)
-            float[] fingerXOffsets = { -0.045f * mirror, -0.025f * mirror, 0f, 0.025f * mirror, 0.045f * mirror };
-            float[] fingerZOffsets = { 0.02f, 0.05f, 0.055f, 0.05f, 0.04f }; // Thumb starts lower
-            float[] fingerLengths = { 0.04f, 0.065f, 0.075f, 0.07f, 0.055f }; // Segment length
-            float[] fingerWidths = { 0.018f, 0.015f, 0.016f, 0.015f, 0.013f };
+            // Finger positions based on Palm position
+            // X offsets: Thumb(Left/Right), Index, Middle, Ring, Pinky
+            float[] fingerXOffsets = { -0.04f * mirror, -0.025f * mirror, 0f, 0.025f * mirror, 0.045f * mirror };
+            // Z starts for fingers (relative to wrist 0)
+            float[] fingerZStarts = { 0.03f, 0.09f, 0.09f, 0.085f, 0.075f };
+            
+            float[] fingerLengths = { 0.04f, 0.05f, 0.06f, 0.055f, 0.045f }; // Proximal phalanx length
+            float[] fingerWidths = { 0.018f, 0.016f, 0.017f, 0.016f, 0.014f };
             string[] fingerNames = { "Thumb", "Index", "Middle", "Ring", "Pinky" };
             
             for (int i = 0; i < 5; i++)
             {
-                CreateProceduralFinger(
-                    spawnedHand.transform, 
-                    fingerNames[i], 
-                    new Vector3(fingerXOffsets[i], 0, fingerZOffsets[i]), 
+                CreateFingerHierarchy(
+                    spawnedHand.transform,
+                    fingerNames[i],
+                    new Vector3(fingerXOffsets[i], 0, fingerZStarts[i]),
                     fingerLengths[i],
                     fingerWidths[i],
                     i == 0, // isThumb
@@ -161,54 +161,69 @@ namespace HackathonVR
             }
             
             FindFingerBones();
-            Debug.Log($"[VRAnimatedHand] Created procedural {handSide} hand");
+            Debug.Log($"[VRAnimatedHand] Created procedural {handSide} hand with Pivots");
         }
-        
-        private void CreateProceduralFinger(Transform parent, string name, Vector3 offset, float segmentLength, float width, bool isThumb, float mirror)
+
+        private void CreateFingerHierarchy(Transform parent, string name, Vector3 rootPos, float baseLength, float width, bool isThumb, float mirror)
         {
-            // Root segment - attached to palm
-            var root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            root.name = name + "_Root";
-            root.transform.SetParent(parent);
-            root.transform.localPosition = offset;
+            // 1. Root Pivot (Knuckle)
+            GameObject rootPivot = new GameObject(name + "_Root");
+            rootPivot.transform.SetParent(parent, false);
+            rootPivot.transform.localPosition = rootPos;
             
-            // Thumb rotates outward, other fingers point forward
+            // Thumb orientation: Rotated outwards and down slightly
             if (isThumb)
             {
-                root.transform.localRotation = Quaternion.Euler(0f, -30f * mirror, -60f * mirror);
+                // Rotate thumb base: Angled out (Y rotation) and down-ish (Z rotation twist) to face opponents
+                // For Right hand (mirror=1): -45 Y (out), 0 Z. 
+                rootPivot.transform.localRotation = Quaternion.Euler(0, -45f * mirror, 0); 
+                // Creating a pre-rotation for the thumb flex
             }
             else
             {
-                // Default was -90 (pointing forward Z from Y-up capsule)
-                // Add configurable offset
-                root.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f) * Quaternion.Euler(fingerRotationOffset);
+                rootPivot.transform.localRotation = Quaternion.identity; // Fingers point straight Z
             }
+
+            // Create Visual for Proximal Phalanx
+            CreateSegmentVisual(rootPivot.transform, baseLength, width);
+
+            // 2. Middle Pivot
+            GameObject middlePivot = new GameObject(name + "_Middle");
+            middlePivot.transform.SetParent(rootPivot.transform, false);
+            middlePivot.transform.localPosition = new Vector3(0, 0, baseLength); // At end of previous
+            middlePivot.transform.localRotation = Quaternion.identity;
+
+            // Visual for Middle Phalanx (slightly shorter)
+            float midLength = baseLength * 0.7f;
+            CreateSegmentVisual(middlePivot.transform, midLength, width * 0.9f);
+
+            // 3. Tip Pivot
+            GameObject tipPivot = new GameObject(name + "_Tip");
+            tipPivot.transform.SetParent(middlePivot.transform, false);
+            tipPivot.transform.localPosition = new Vector3(0, 0, midLength);
+            tipPivot.transform.localRotation = Quaternion.identity;
+
+            // Visual for Distal Phalanx
+            float tipLength = baseLength * 0.6f;
+            CreateSegmentVisual(tipPivot.transform, tipLength, width * 0.8f);
+        }
+
+        private void CreateSegmentVisual(Transform parent, float length, float width)
+        {
+            var visual = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            Destroy(visual.GetComponent<Collider>());
+            visual.transform.SetParent(parent, false);
             
-            // Scale: capsule is 2 units tall by default, so height = scale.y * 2
-            root.transform.localScale = new Vector3(width, segmentLength * 0.5f, width);
-            Destroy(root.GetComponent<Collider>());
-            SetHandMaterial(root);
+            // Align capsule (Y-up) to Z-forward
+            visual.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             
-            // Middle segment
-            var middle = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            middle.name = name + "_Middle";
-            middle.transform.SetParent(root.transform);
-            // Position at end of previous segment (local Y direction)
-            middle.transform.localPosition = new Vector3(0, 2f, 0); // 2 = full capsule length in local space
-            middle.transform.localRotation = Quaternion.identity;
-            middle.transform.localScale = new Vector3(0.9f, 0.85f, 0.9f); // Slightly smaller
-            Destroy(middle.GetComponent<Collider>());
-            SetHandMaterial(middle);
+            // Center the visual along the segment length (Move forward by length/2)
+            visual.transform.localPosition = new Vector3(0, 0, length * 0.5f);
             
-            // Tip segment
-            var tip = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            tip.name = name + "_Tip";
-            tip.transform.SetParent(middle.transform);
-            tip.transform.localPosition = new Vector3(0, 2f, 0);
-            tip.transform.localRotation = Quaternion.identity;
-            tip.transform.localScale = new Vector3(0.85f, 0.7f, 0.85f); // Even smaller for fingertip
-            Destroy(tip.GetComponent<Collider>());
-            SetHandMaterial(tip);
+            // Scale (Y is half-height)
+            visual.transform.localScale = new Vector3(width, length * 0.5f, width);
+            
+            SetHandMaterial(visual);
         }
         
         private void SetHandMaterial(GameObject obj)
@@ -223,9 +238,13 @@ namespace HackathonVR
             }
         }
         
+        private Dictionary<Transform, Quaternion> initialRotations = new Dictionary<Transform, Quaternion>();
+
         private void FindFingerBones()
         {
             if (spawnedHand == null) return;
+            
+            initialRotations.Clear();
             
             // Find finger transforms by name
             thumbRoot = FindBone("Thumb_Root", "thumb_0", "thumb0");
@@ -247,6 +266,24 @@ namespace HackathonVR
             pinkyRoot = FindBone("Pinky_Root", "pinky_0", "pinky1");
             pinkyMiddle = FindBone("Pinky_Middle", "pinky_1", "pinky2");
             pinkyTip = FindBone("Pinky_Tip", "pinky_2", "pinky3");
+            
+            // Store initial rotations
+            StoreRotation(thumbRoot, thumbMiddle, thumbTip);
+            StoreRotation(indexRoot, indexMiddle, indexTip);
+            StoreRotation(middleRoot, middleMiddle, middleTip);
+            StoreRotation(ringRoot, ringMiddle, ringTip);
+            StoreRotation(pinkyRoot, pinkyMiddle, pinkyTip);
+        }
+        
+        private void StoreRotation(params Transform[] bones)
+        {
+            foreach (var bone in bones)
+            {
+                if (bone != null && !initialRotations.ContainsKey(bone))
+                {
+                    initialRotations.Add(bone, bone.localRotation);
+                }
+            }
         }
         
         private Transform FindBone(params string[] possibleNames)
@@ -398,11 +435,19 @@ namespace HackathonVR
             if (root == null) return;
             
             float angle = Mathf.Lerp(minAngle, maxAngle, curl);
-            Quaternion rotation = Quaternion.Euler(angle, 0, 0);
+            Quaternion bendRotation = Quaternion.Euler(angle, 0, 0);
             
-            root.localRotation = rotation;
-            if (middle != null) middle.localRotation = rotation;
-            if (tip != null) tip.localRotation = rotation;
+            ApplyRotation(root, bendRotation);
+            ApplyRotation(middle, bendRotation);
+            ApplyRotation(tip, bendRotation);
+        }
+        
+        private void ApplyRotation(Transform bone, Quaternion bend)
+        {
+            if (bone != null && initialRotations.ContainsKey(bone))
+            {
+                bone.localRotation = initialRotations[bone] * bend;
+            }
         }
         
         private bool HasParameter(Animator animator, string paramName)

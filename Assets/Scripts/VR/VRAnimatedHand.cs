@@ -20,7 +20,8 @@ namespace HackathonVR
         [SerializeField] private HandSide handSide = HandSide.Right;
         [SerializeField] private GameObject handModelPrefab;
         [SerializeField] private bool hideControllerVisual = true;
-        [SerializeField] private Vector3 proceduralRotationOffset = Vector3.zero; // Adjusted to align with wrist
+        [SerializeField] private Vector3 proceduralRotationOffset = new Vector3(90f, 0f, 0f); // Adjusted to align with wrist
+        [SerializeField] private Vector3 fingerRotationOffset = new Vector3(90f, 0f, 0f); // Fingers rotated 90 deg relative to hand
         
         [Header("Animation Settings")]
         [SerializeField] private float fingerSpeed = 15f;
@@ -176,7 +177,9 @@ namespace HackathonVR
             }
             else
             {
-                root.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f); // Point forward (along +Z becomes +Y in local)
+                // Default was -90 (pointing forward Z from Y-up capsule)
+                // Add configurable offset
+                root.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f) * Quaternion.Euler(fingerRotationOffset);
             }
             
             // Scale: capsule is 2 units tall by default, so height = scale.y * 2

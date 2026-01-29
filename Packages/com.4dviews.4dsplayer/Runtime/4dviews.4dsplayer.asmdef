@@ -1,0 +1,8 @@
+{
+	"name": "4DViews.4DSPlayer",
+	"allowUnsafeCode": true,
+	"references": [
+		"Unity.Timeline",
+		"Unity.Burst"
+    ]
+}

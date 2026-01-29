@@ -1,0 +1,12 @@
+{
+    "name": "4DViews.4DSPlayer.Editor",
+    "references": [
+        "4DViews.4DSPlayer"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}

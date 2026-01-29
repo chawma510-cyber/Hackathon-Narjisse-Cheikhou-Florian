@@ -1,0 +1,9 @@
+Node4D #title {
+    background-color: rgba(29, 57, 115, 0.9);
+}
+Node4D #extension {
+    background-color: rgba(76, 76, 76, 0.8);
+}
+Node4D #output {
+    max-height: 30px;
+}

@@ -1,0 +1,27 @@
+{
+    "name": "com.4dviews.4dsplayer",
+    "version": "3.11.1",
+    "description": "Decode 4Dviews volumetric 4DS files",
+    "displayName": "4DS Player",
+    "unity": "2022.3",
+    "author":
+    {
+        "name": "4Dviews team",
+        "email": "support@4dviews.com",
+        "url": "https://www.4dviews.com"
+    },
+	"dependencies":
+    {
+        "com.unity.timeline": "1.7.6",
+        "com.unity.burst": "1.8.18"
+    },
+    "documentationUrl": "https://www.4dviews.com/",
+    "keywords": ["4D", "Volumetric"],
+    "samples": [
+        {
+            "displayName": "Streaming Sample",
+            "description": "Stream a 4DS file from a HTTP server",
+            "path": "Samples~/Streaming/"
+        }
+    ]
+}

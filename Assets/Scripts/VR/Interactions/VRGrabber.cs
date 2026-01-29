@@ -22,6 +22,14 @@ namespace HackathonVR.Interactions
         [SerializeField] private float distanceGrabRange = 10f;
         [SerializeField] private float distanceGrabActivation = 0.3f; // Trigger threshold to show laser
         
+        [Header("Telekinesis Settings")]
+        [SerializeField] private bool useTelekinesisMode = true; // Object floats along laser instead of sticking to hand
+        [SerializeField] private float minGrabDistance = 0.3f;
+        [SerializeField] private float maxGrabDistance = 8f;
+        [SerializeField] private float distanceChangeSpeed = 3f; // How fast thumbstick changes distance
+        [SerializeField] private float positionSmoothSpeed = 20f; // How fast object follows target position
+        [SerializeField] private float rotationSmoothSpeed = 15f; // How fast object rotates to follow wrist
+        
         [Header("Laser Pointer Settings")]
         [SerializeField] private float laserWidth = 0.008f;
         [SerializeField] private Color laserColor = new Color(0.3f, 0.8f, 1f, 0.8f);
@@ -58,6 +66,10 @@ namespace HackathonVR.Interactions
         private float currentGrabValue = 0f;
         private float currentTriggerValue = 0f;
         private bool isShowingLaser = false;
+        
+        // Telekinesis state
+        private float currentGrabDistance = 2f;
+        private Quaternion grabRotationOffset;
         
         // Laser
         private LineRenderer laserLine;
@@ -162,8 +174,42 @@ namespace HackathonVR.Interactions
                     UpdateDistanceGrab();
                 }
             }
+            else if (useTelekinesisMode && currentlyGrabbed != null)
+            {
+                // Update telekinesis - object follows laser and thumbstick controls distance
+                UpdateTelekinesis();
+            }
             
             UpdateLaserVisual();
+        }
+        
+        private void UpdateTelekinesis()
+        {
+            // Get thumbstick input to control distance
+            if (controller.TryGetFeatureValue(CommonUsages.primary2DAxis, out Vector2 thumbstick))
+            {
+                // Use Y axis to push/pull object
+                currentGrabDistance += thumbstick.y * distanceChangeSpeed * Time.deltaTime;
+                currentGrabDistance = Mathf.Clamp(currentGrabDistance, minGrabDistance, maxGrabDistance);
+            }
+            
+            // Calculate target position along laser direction
+            Vector3 targetPosition = transform.position + LaserDirection * currentGrabDistance;
+            
+            // Smoothly move object to target position
+            currentlyGrabbed.transform.position = Vector3.Lerp(
+                currentlyGrabbed.transform.position,
+                targetPosition,
+                positionSmoothSpeed * Time.deltaTime
+            );
+            
+            // Rotate object to follow wrist rotation (with offset preserved)
+            Quaternion targetRotation = transform.rotation * grabRotationOffset;
+            currentlyGrabbed.transform.rotation = Quaternion.Slerp(
+                currentlyGrabbed.transform.rotation,
+                targetRotation,
+                rotationSmoothSpeed * Time.deltaTime
+            );
         }
         
         private void UpdateGrabInput()

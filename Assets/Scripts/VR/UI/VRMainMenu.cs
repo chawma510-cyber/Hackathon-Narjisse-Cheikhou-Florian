@@ -11,23 +11,17 @@ namespace HackathonVR.UI
     {
         [Header("Menu Settings")]
         [SerializeField] private string gameSceneName = "VRScene";
-        [SerializeField] private float buttonHeight = 1.5f;
+        [SerializeField] private float buttonHeight = 1.3f; // Slightly lower
         [SerializeField] private float buttonDistance = 2f;
         
         [Header("Title Settings")]
-        [SerializeField] private string gameTitle = "VR EXPERIENCE";
-        [SerializeField] private Color titleColor = new Color(0.3f, 0.8f, 1f);
+        [SerializeField] private string gameTitle = "Mini-Me";
+        [SerializeField] private Color titleColor = new Color(0.2f, 0.9f, 1f);
         
         [Header("Button Appearance")]
         [SerializeField] private Color playButtonColor = new Color(0.2f, 0.8f, 0.3f);
         [SerializeField] private Color quitButtonColor = new Color(0.8f, 0.2f, 0.2f);
-        [SerializeField] private float buttonWidth = 0.8f;
-        [SerializeField] private float buttonHeightSize = 0.3f;
-        
-        [Header("Animation")]
-        [SerializeField] private float floatAmplitude = 0.05f;
-        [SerializeField] private float floatSpeed = 2f;
-        [SerializeField] private float rotateSpeed = 15f;
+        [SerializeField] private Color sliderColor = new Color(0.4f, 0.4f, 0.9f);
         
         [Header("Audio")]
         [SerializeField] private AudioClip backgroundMusic;
@@ -36,21 +30,22 @@ namespace HackathonVR.UI
         
         // Components
         private GameObject menuParent;
-        private GameObject titleObject;
-        private GameObject playButton;
-        private GameObject quitButton;
         private AudioSource musicSource;
         private AudioSource sfxSource;
         
-        // State
-        private Vector3 playButtonBasePos;
-        private Vector3 quitButtonBasePos;
-        private float animTime = 0f;
+        // Volume control
+        private Transform volumeKnob;
+        private float currentVolume = 0.5f;
         
         private void Start()
         {
-            CreateMenu();
+            menuParent = new GameObject("MainMenu");
+            menuParent.transform.position = new Vector3(0, buttonHeight, buttonDistance);
+            
             SetupAudio();
+            CreateTitle();
+            CreateButtons();
+            CreateVolumeControl();
             
             // Try to load music from Resources if not assigned
             if (backgroundMusic == null)
@@ -61,165 +56,129 @@ namespace HackathonVR.UI
             PlayBackgroundMusic();
         }
         
-        private void CreateMenu()
+        private void CreateButtons()
         {
-            menuParent = new GameObject("MainMenu");
-            menuParent.transform.position = new Vector3(0, buttonHeight, buttonDistance);
+            // Create flat play button
+            CreateFlatButton("JOUER", playButtonColor, new Vector3(-0.4f, 0, 0), OnPlayPressed);
             
-            // Create floating title
-            CreateTitle();
-            
-            // Create play button
-            playButton = CreateButton("JOUER", playButtonColor, new Vector3(-0.5f, 0, 0));
-            playButtonBasePos = playButton.transform.localPosition;
-            
-            // Create quit button
-            quitButton = CreateButton("QUITTER", quitButtonColor, new Vector3(0.5f, 0, 0));
-            quitButtonBasePos = quitButton.transform.localPosition;
-            
-            // Add VR button components for interaction
-            AddVRButtonBehavior(playButton, OnPlayPressed);
-            AddVRButtonBehavior(quitButton, OnQuitPressed);
+            // Create flat quit button
+            CreateFlatButton("QUITTER", quitButtonColor, new Vector3(0.4f, 0, 0), OnQuitPressed);
         }
         
-        private void CreateTitle()
-        {
-            titleObject = new GameObject("Title");
-            titleObject.transform.SetParent(menuParent.transform);
-            titleObject.transform.localPosition = new Vector3(0, 0.6f, 0);
-            
-            // Create 3D text using TextMesh
-            var textMesh = titleObject.AddComponent<TextMesh>();
-            textMesh.text = gameTitle;
-            textMesh.fontSize = 100;
-            textMesh.characterSize = 0.02f;
-            textMesh.anchor = TextAnchor.MiddleCenter;
-            textMesh.alignment = TextAlignment.Center;
-            textMesh.color = titleColor;
-            textMesh.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            
-            // Add glow effect with second text behind
-            var glowObj = new GameObject("TitleGlow");
-            glowObj.transform.SetParent(titleObject.transform);
-            glowObj.transform.localPosition = new Vector3(0, 0, 0.01f);
-            glowObj.transform.localScale = Vector3.one * 1.05f;
-            
-            var glowMesh = glowObj.AddComponent<TextMesh>();
-            glowMesh.text = gameTitle;
-            glowMesh.fontSize = 100;
-            glowMesh.characterSize = 0.02f;
-            glowMesh.anchor = TextAnchor.MiddleCenter;
-            glowMesh.alignment = TextAlignment.Center;
-            glowMesh.color = new Color(titleColor.r, titleColor.g, titleColor.b, 0.3f);
-        }
-        
-        private GameObject CreateButton(string text, Color color, Vector3 localOffset)
+        private void CreateFlatButton(string text, Color color, Vector3 pos, System.Action action)
         {
             var button = new GameObject("Button_" + text);
             button.transform.SetParent(menuParent.transform);
-            button.transform.localPosition = localOffset;
+            button.transform.localPosition = pos;
             
-            // Button background (rounded cube effect with multiple cubes)
-            var bg = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            bg.name = "Background";
+            // Flat background (Quad)
+            var bg = GameObject.CreatePrimitive(PrimitiveType.Quad); // Using Quad for flat look
             bg.transform.SetParent(button.transform);
             bg.transform.localPosition = Vector3.zero;
-            bg.transform.localScale = new Vector3(buttonWidth, buttonHeightSize, 0.08f);
+            bg.transform.localScale = new Vector3(0.6f, 0.2f, 1f);
             
             var bgRenderer = bg.GetComponent<Renderer>();
-            var bgMat = new Material(Shader.Find("Standard"));
+            var bgMat = new Material(Shader.Find("Unlit/Color")); // Unlit for flat design
             bgMat.color = color;
-            bgMat.EnableKeyword("_EMISSION");
-            bgMat.SetColor("_EmissionColor", color * 0.3f);
             bgRenderer.material = bgMat;
             
-            // Keep collider for VR interaction
-            var collider = bg.GetComponent<BoxCollider>();
-            collider.isTrigger = true;
-            
-            // Button text
+            // Text on top
             var textObj = new GameObject("Text");
             textObj.transform.SetParent(button.transform);
-            textObj.transform.localPosition = new Vector3(0, 0, -0.05f);
-            
+            textObj.transform.localPosition = new Vector3(0, 0, -0.01f);
             var textMesh = textObj.AddComponent<TextMesh>();
             textMesh.text = text;
-            textMesh.fontSize = 80;
-            textMesh.characterSize = 0.015f;
+            textMesh.fontSize = 60;
+            textMesh.characterSize = 0.01f;
             textMesh.anchor = TextAnchor.MiddleCenter;
             textMesh.alignment = TextAlignment.Center;
             textMesh.color = Color.white;
             
-            // Add frame/border
-            CreateButtonFrame(button.transform, color);
+            // Interaction collider
+            var collider = bg.GetComponent<Collider>();
+            collider.isTrigger = true;
             
-            return button;
+            // VR interaction
+            var behavior = bg.AddComponent<VRMenuButton>();
+            behavior.Initialize(action, sfxSource, buttonHoverSound, buttonClickSound);
+            behavior.targetRenderer = bgRenderer;
+            behavior.normalColor = color;
+            behavior.hoverColor = Color.Lerp(color, Color.white, 0.3f);
         }
         
-        private void CreateButtonFrame(Transform parent, Color color)
+        private void CreateVolumeControl()
         {
-            float frameThickness = 0.02f;
-            Color frameColor = Color.Lerp(color, Color.white, 0.5f);
+            var sliderParent = new GameObject("VolumeControl");
+            sliderParent.transform.SetParent(menuParent.transform);
+            sliderParent.transform.localPosition = new Vector3(0, -0.3f, 0);
             
-            // Top frame
-            CreateFramePiece(parent, "TopFrame", 
-                new Vector3(0, buttonHeightSize/2 + frameThickness/2, 0),
-                new Vector3(buttonWidth + frameThickness*2, frameThickness, 0.09f),
-                frameColor);
+            // Label
+            var label = new GameObject("Label");
+            label.transform.SetParent(sliderParent.transform);
+            label.transform.localPosition = new Vector3(-0.5f, 0, 0);
+            var text = label.AddComponent<TextMesh>();
+            text.text = "VOLUME";
+            text.fontSize = 40;
+            text.characterSize = 0.01f;
+            text.anchor = TextAnchor.MiddleRight;
+            text.color = Color.white;
             
-            // Bottom frame
-            CreateFramePiece(parent, "BottomFrame", 
-                new Vector3(0, -buttonHeightSize/2 - frameThickness/2, 0),
-                new Vector3(buttonWidth + frameThickness*2, frameThickness, 0.09f),
-                frameColor);
+            // Slider bar
+            var bar = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            bar.transform.SetParent(sliderParent.transform);
+            bar.transform.localPosition = Vector3.zero;
+            bar.transform.localScale = new Vector3(0.8f, 0.02f, 1f);
+            var barMat = new Material(Shader.Find("Unlit/Color"));
+            barMat.color = Color.gray;
+            bar.GetComponent<Renderer>().material = barMat;
             
-            // Left frame
-            CreateFramePiece(parent, "LeftFrame", 
-                new Vector3(-buttonWidth/2 - frameThickness/2, 0, 0),
-                new Vector3(frameThickness, buttonHeightSize, 0.09f),
-                frameColor);
+            // Slider knob (interactive)
+            var knob = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            knob.name = "VolumeKnob";
+            knob.transform.SetParent(sliderParent.transform);
+            knob.transform.localPosition = Vector3.zero; // Center (0.5 volume)
+            knob.transform.localScale = Vector3.one * 0.08f;
             
-            // Right frame
-            CreateFramePiece(parent, "RightFrame", 
-                new Vector3(buttonWidth/2 + frameThickness/2, 0, 0),
-                new Vector3(frameThickness, buttonHeightSize, 0.09f),
-                frameColor);
+            var knobMat = new Material(Shader.Find("Unlit/Color"));
+            knobMat.color = sliderColor;
+            knob.GetComponent<Renderer>().material = knobMat;
+            
+            var knobRb = knob.AddComponent<Rigidbody>();
+            knobRb.isKinematic = true;
+            knobRb.useGravity = false;
+            
+            // Add interaction script for sliding
+            var slider = knob.AddComponent<VRVolumeSlider>();
+            slider.Initialize(this, -0.4f, 0.4f);
+            
+            volumeKnob = knob.transform;
+            UpdateVolume(0.5f); // Set initial volume display
         }
         
-        private void CreateFramePiece(Transform parent, string name, Vector3 pos, Vector3 scale, Color color)
+        public void UpdateVolume(float percent)
         {
-            var piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            piece.name = name;
-            piece.transform.SetParent(parent);
-            piece.transform.localPosition = pos;
-            piece.transform.localScale = scale;
-            Destroy(piece.GetComponent<Collider>());
+            currentVolume = Mathf.Clamp01(percent);
+            if (musicSource != null) musicSource.volume = currentVolume;
+            if (MusicManager.Instance != null) MusicManager.Instance.SetVolume(currentVolume);
             
-            var mat = new Material(Shader.Find("Unlit/Color"));
-            mat.color = color;
-            piece.GetComponent<Renderer>().material = mat;
-        }
-        
-        private void AddVRButtonBehavior(GameObject button, System.Action onPress)
-        {
-            var behavior = button.AddComponent<VRMenuButton>();
-            behavior.Initialize(onPress, sfxSource, buttonHoverSound, buttonClickSound);
+            // Move knob physically
+            if (volumeKnob != null)
+            {
+                volumeKnob.localPosition = new Vector3(Mathf.Lerp(-0.4f, 0.4f, currentVolume), 0, 0);
+            }
         }
         
         private void SetupAudio()
         {
-            // Background music source
             musicSource = gameObject.AddComponent<AudioSource>();
             musicSource.loop = true;
-            musicSource.volume = 0.5f;
-            musicSource.spatialBlend = 0f; // 2D sound
+            musicSource.volume = currentVolume;
+            musicSource.spatialBlend = 0f;
             
-            // SFX source
             sfxSource = gameObject.AddComponent<AudioSource>();
             sfxSource.spatialBlend = 0f;
-            sfxSource.volume = 0.7f;
         }
-        
+
         private void PlayBackgroundMusic()
         {
             if (backgroundMusic != null && musicSource != null)
@@ -232,37 +191,6 @@ namespace HackathonVR.UI
         
         private void Update()
         {
-            AnimateButtons();
-        }
-        
-        private void AnimateButtons()
-        {
-            animTime += Time.deltaTime;
-            
-            // Float animation
-            float floatOffset = Mathf.Sin(animTime * floatSpeed) * floatAmplitude;
-            
-            if (playButton != null)
-            {
-                playButton.transform.localPosition = playButtonBasePos + Vector3.up * floatOffset;
-            }
-            
-            if (quitButton != null)
-            {
-                float quitOffset = Mathf.Sin(animTime * floatSpeed + Mathf.PI * 0.5f) * floatAmplitude;
-                quitButton.transform.localPosition = quitButtonBasePos + Vector3.up * quitOffset;
-            }
-            
-            // Title gentle rotation
-            if (titleObject != null)
-            {
-                titleObject.transform.localRotation = Quaternion.Euler(
-                    Mathf.Sin(animTime * 0.5f) * 3f,
-                    Mathf.Sin(animTime * 0.3f) * 5f,
-                    0
-                );
-            }
-            
             // Rotate menu to face camera
             if (Camera.main != null && menuParent != null)
             {
@@ -283,18 +211,12 @@ namespace HackathonVR.UI
         private void OnPlayPressed()
         {
             Debug.Log("[VRMainMenu] Play button pressed - Loading game scene");
-            
-            // Store that we should play music in game scene
-            PlayerPrefs.SetInt("PlayMusic", 1);
-            PlayerPrefs.Save();
-            
             SceneManager.LoadScene(gameSceneName);
         }
         
         private void OnQuitPressed()
         {
             Debug.Log("[VRMainMenu] Quit button pressed");
-            
             #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
             #else
@@ -303,9 +225,6 @@ namespace HackathonVR.UI
         }
     }
     
-    /// <summary>
-    /// VR-compatible menu button that can be pressed by hand collision or laser pointer
-    /// </summary>
     public class VRMenuButton : MonoBehaviour
     {
         private System.Action onPressCallback;
@@ -313,11 +232,11 @@ namespace HackathonVR.UI
         private AudioClip hoverSound;
         private AudioClip clickSound;
         
-        private Renderer buttonRenderer;
-        private Color originalColor;
-        private Color hoverColor;
+        public Renderer targetRenderer;
+        public Color normalColor;
+        public Color hoverColor;
+        
         private bool isHovered = false;
-        private float pressedScale = 0.95f;
         private bool isPressed = false;
         
         public void Initialize(System.Action callback, AudioSource audio, AudioClip hover, AudioClip click)
@@ -326,116 +245,126 @@ namespace HackathonVR.UI
             audioSource = audio;
             hoverSound = hover;
             clickSound = click;
-            
-            // Get background renderer
-            var bg = transform.Find("Background");
-            if (bg != null)
-            {
-                buttonRenderer = bg.GetComponent<Renderer>();
-                if (buttonRenderer != null)
-                {
-                    originalColor = buttonRenderer.material.color;
-                    hoverColor = Color.Lerp(originalColor, Color.white, 0.3f);
-                }
-            }
         }
         
         private void OnTriggerEnter(Collider other)
         {
-            // Check if it's a VR hand/controller
-            if (other.GetComponentInParent<HackathonVR.Interactions.VRGrabber>() != null ||
-                other.CompareTag("Hand") || other.CompareTag("Controller"))
+            if (IsHandOrController(other))
             {
                 if (!isHovered)
                 {
                     isHovered = true;
-                    OnHoverEnter();
+                    targetRenderer.material.color = hoverColor;
+                    if (audioSource) audioSource.PlayOneShot(hoverSound);
                 }
             }
         }
         
         private void OnTriggerStay(Collider other)
         {
-            // Check for press (grip button)
             var grabber = other.GetComponentInParent<HackathonVR.Interactions.VRGrabber>();
-            if (grabber != null && !isPressed)
+            // Press on trigger or grip
+            if (grabber != null && !isPressed && grabber.IsGrabbing)
             {
-                // Check if grip is pressed
-                if (grabber.IsGrabbing)
-                {
-                    OnPress();
-                }
+                OnPress();
             }
         }
         
         private void OnTriggerExit(Collider other)
         {
-            if (other.GetComponentInParent<HackathonVR.Interactions.VRGrabber>() != null ||
-                other.CompareTag("Hand") || other.CompareTag("Controller"))
+            if (IsHandOrController(other))
             {
                 isHovered = false;
-                OnHoverExit();
+                targetRenderer.material.color = normalColor;
+                isPressed = false;
             }
         }
         
-        private void OnHoverEnter()
+        private bool IsHandOrController(Collider col)
         {
-            if (buttonRenderer != null)
-            {
-                buttonRenderer.material.color = hoverColor;
-                buttonRenderer.material.SetColor("_EmissionColor", hoverColor * 0.5f);
-            }
-            
-            if (audioSource != null && hoverSound != null)
-            {
-                audioSource.PlayOneShot(hoverSound);
-            }
-            
-            // Slight scale up
-            transform.localScale = Vector3.one * 1.05f;
-        }
-        
-        private void OnHoverExit()
-        {
-            if (buttonRenderer != null)
-            {
-                buttonRenderer.material.color = originalColor;
-                buttonRenderer.material.SetColor("_EmissionColor", originalColor * 0.3f);
-            }
-            
-            transform.localScale = Vector3.one;
-            isPressed = false;
+            return col.GetComponentInParent<HackathonVR.Interactions.VRGrabber>() != null ||
+                   col.CompareTag("Hand") || col.CompareTag("Controller");
         }
         
         private void OnPress()
         {
             isPressed = true;
+            if (audioSource) audioSource.PlayOneShot(clickSound);
             
-            if (audioSource != null && clickSound != null)
-            {
-                audioSource.PlayOneShot(clickSound);
-            }
+            // Visual pulse
+            StartCoroutine(PulseEffect());
             
-            // Visual feedback
-            transform.localScale = Vector3.one * pressedScale;
-            
-            // Haptic feedback if possible
+            // Haptic
             var grabbers = FindObjectsByType<HackathonVR.Interactions.VRGrabber>(FindObjectsSortMode.None);
-            foreach (var grabber in grabbers)
-            {
-                grabber.TriggerHaptic(0.5f, 0.15f);
-            }
+            foreach (var g in grabbers) g.TriggerHaptic(0.8f, 0.1f);
             
-            // Invoke callback
             onPressCallback?.Invoke();
         }
         
-        // Also support laser pointer click
+        private System.Collections.IEnumerator PulseEffect()
+        {
+            transform.localScale *= 0.9f;
+            yield return new WaitForSeconds(0.1f);
+            transform.localScale /= 0.9f;
+        }
+        
         public void OnPointerClick()
         {
-            if (!isPressed)
+            if (!isPressed) OnPress();
+        }
+    }
+    
+    public class VRVolumeSlider : MonoBehaviour
+    {
+        private VRMainMenu menu;
+        private float minX, maxX;
+        private bool isDragging = false;
+        private Transform draggingHand;
+        
+        public void Initialize(VRMainMenu menuRef, float min, float max)
+        {
+            menu = menuRef;
+            minX = min;
+            maxX = max;
+        }
+        
+        private void OnTriggerEnter(Collider other)
+        {
+            var grabber = other.GetComponentInParent<HackathonVR.Interactions.VRGrabber>();
+            if (grabber != null)
             {
-                OnPress();
+                grabber.TriggerHaptic(0.1f, 0.05f);
+            }
+        }
+        
+        private void OnTriggerStay(Collider other)
+        {
+            var grabber = other.GetComponentInParent<HackathonVR.Interactions.VRGrabber>();
+            if (grabber != null && grabber.IsGrabbing)
+            {
+                isDragging = true;
+                draggingHand = grabber.transform;
+            }
+            else
+            {
+                isDragging = false;
+                draggingHand = null;
+            }
+        }
+        
+        private void Update()
+        {
+            if (isDragging && draggingHand != null)
+            {
+                // Project hand position onto slider axis (local X)
+                Vector3 localHandPos = transform.parent.InverseTransformPoint(draggingHand.position);
+                float newX = Mathf.Clamp(localHandPos.x, minX, maxX);
+                
+                transform.localPosition = new Vector3(newX, 0, 0);
+                
+                // Calculate percentage
+                float pct = Mathf.InverseLerp(minX, maxX, newX);
+                menu.UpdateVolume(pct);
             }
         }
     }

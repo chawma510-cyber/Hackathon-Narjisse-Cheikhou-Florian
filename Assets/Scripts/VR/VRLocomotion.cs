@@ -48,7 +48,7 @@ namespace HackathonVR
 
         private void Start()
         {
-            CreateTeleportIndicator();
+            // Teleport removed
         }
 
         private void Update()

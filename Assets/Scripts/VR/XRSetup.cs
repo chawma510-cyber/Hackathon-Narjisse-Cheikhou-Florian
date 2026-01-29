@@ -14,11 +14,11 @@ namespace HackathonVR
     public class XRSetup : MonoBehaviour
     {
         [Header("Setup Options")]
-        [SerializeField] private bool createFloor = true;
-        [SerializeField] private bool createInteractionManager = true;
-        [SerializeField] private bool createDecor = true;
-        [SerializeField] private bool enableGrabInteraction = true;
-        [SerializeField] private bool createGrabbableTestObjects = true;
+        public bool createFloor = false;
+        public bool createInteractionManager = true;
+        public bool createDecor = false;
+        public bool enableGrabInteraction = true;
+        public bool createGrabbableTestObjects = false;
         
         private Camera vrCamera;
         private Transform cameraTransform;
@@ -30,6 +30,11 @@ namespace HackathonVR
         
         private void SetupXR()
         {
+            // FORCE DISABLE EXTRA CONTENT (Fix User Request: No Table/Floor/Decor)
+            createFloor = false;
+            createDecor = false;
+            createGrabbableTestObjects = false;
+
             // Create XR Interaction Manager if needed
             if (createInteractionManager && FindFirstObjectByType<XRInteractionManager>() == null)
             {

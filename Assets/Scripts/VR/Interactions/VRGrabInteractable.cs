@@ -165,6 +165,8 @@ namespace HackathonVR.Interactions
                 case GrabType.Instantaneous:
                     rb.isKinematic = true;
                     rb.useGravity = false;
+                    rb.linearVelocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
                     break;
                 case GrabType.Physics:
                     // Keep physics but disable gravity temporarily
@@ -172,17 +174,18 @@ namespace HackathonVR.Interactions
                     break;
             }
             
-            // Parent to grabber
+            // Parent to grabber for perfect following
             transform.SetParent(grabber.GrabPoint);
             
-            // Apply snap offset if configured
+            // Apply snap offset if configured, otherwise center on hand
             if (useSnapPoint)
             {
                 transform.localPosition = snapPositionOffset;
                 transform.localRotation = Quaternion.Euler(snapRotationOffset);
             }
-            else if (grabType == GrabType.Instantaneous)
+            else
             {
+                // Center object on grab point for perfect following
                 transform.localPosition = Vector3.zero;
                 transform.localRotation = Quaternion.identity;
             }

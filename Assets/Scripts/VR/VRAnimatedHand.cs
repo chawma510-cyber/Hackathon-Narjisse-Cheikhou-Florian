@@ -139,7 +139,9 @@ namespace HackathonVR
             
             // Finger positions (X offset from center, Z offset from palm)
             // Order: Thumb, Index, Middle, Ring, Pinky
-            float[] fingerXOffsets = { 0.045f * mirror, 0.025f * mirror, 0f, -0.025f * mirror, -0.045f * mirror };
+            // Corrected for Palm Down: Thumb should be Left (-X) for Right Hand, Right (+X) for Left Hand
+            // Since mirror is 1 for Right, we negate the values to put Thumb on Left (-0.045)
+            float[] fingerXOffsets = { -0.045f * mirror, -0.025f * mirror, 0f, 0.025f * mirror, 0.045f * mirror };
             float[] fingerZOffsets = { 0.02f, 0.05f, 0.055f, 0.05f, 0.04f }; // Thumb starts lower
             float[] fingerLengths = { 0.04f, 0.065f, 0.075f, 0.07f, 0.055f }; // Segment length
             float[] fingerWidths = { 0.018f, 0.015f, 0.016f, 0.015f, 0.013f };

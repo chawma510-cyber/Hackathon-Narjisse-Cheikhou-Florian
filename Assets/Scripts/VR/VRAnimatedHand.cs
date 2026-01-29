@@ -121,7 +121,7 @@ namespace HackathonVR
             spawnedHand = new GameObject("ProceduralHand");
             spawnedHand.transform.SetParent(transform);
             spawnedHand.transform.localPosition = Vector3.zero;
-            spawnedHand.transform.localRotation = Quaternion.identity; // Align with controller Z-forward
+            spawnedHand.transform.localRotation = Quaternion.Euler(proceduralRotationOffset); // Rotate entire hand (90 deg forward)
             
             // Mirror factor for Left/Right
             float mirror = handSide == HandSide.Left ? -1f : 1f;

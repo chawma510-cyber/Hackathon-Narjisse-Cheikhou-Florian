@@ -52,10 +52,21 @@ namespace HackathonVR.Gameplay
             Debug.Log("[StoryManager] Book finished. Narjisse speaks.");
             
             // 1. Narjisse Dialogue
-            if (DialogueManager.Instance != null)
+            if (narjisseDialogue != null)
             {
+                // Ensure audio source helps sound originate from her? 
+                // SimpleDialogue doesn't handle audio, but we can play sound here.
+                
+                var lines = new System.Collections.Generic.List<string>();
+                lines.Add("Regarde le télescope ! Il s'est passé quelque chose...");
+                narjisseDialogue.SetDialogue(lines);
+            }
+            else if (DialogueManager.Instance != null)
+            {
+                // Fallback
                 DialogueManager.Instance.ShowMessage("Narjisse", "Regarde le télescope ! Il s'est passé quelque chose...", 4f);
             }
+            
             yield return new WaitForSeconds(4f);
 
             // 2. Narjisse Action (Fake animation/move)
@@ -112,7 +123,7 @@ namespace HackathonVR.Gameplay
                 if (currentLookTime > lookDuration)
                 {
                     waitingForPlayerLook = false;
-                    StartCoroutine(Sequence_TransitionToScene2());
+                    StartCoroutine(Sequence_TransitionToScene3());
                 }
             }
             else
@@ -121,7 +132,7 @@ namespace HackathonVR.Gameplay
             }
         }
 
-        private IEnumerator Sequence_TransitionToScene2()
+        private IEnumerator Sequence_TransitionToScene3()
         {
             Debug.Log("[StoryManager] Player looked! TRANSITIONING...");
             
@@ -131,9 +142,9 @@ namespace HackathonVR.Gameplay
             // 2. Flash
             yield return FlashScreen(2f); // Long white flash
             
-            // 3. Load Scene 2
-            Debug.Log("[StoryManager] Loading Scene 2...");
-            UnityEngine.SceneManagement.SceneManager.LoadScene("2");
+            // 3. Load Scene 3
+            Debug.Log("[StoryManager] Loading Scene 3...");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("3");
         }
 
         private IEnumerator FlashScreen(float duration)

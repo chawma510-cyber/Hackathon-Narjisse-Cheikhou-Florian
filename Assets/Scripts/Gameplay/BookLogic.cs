@@ -7,8 +7,8 @@ namespace HackathonVR.Gameplay
 {
     public class BookLogic : MonoBehaviour
     {
-        [TextArea(3, 5)]
-        public string loreText = "Mon grand-père adorait la légende du télescope. Il disait qu'on pouvait voir la Terre sous un autre œil avec. Cela fait 1 an qu'il a disparu après être allé regarder dedans comme d'habitude...";
+        [TextArea(3, 10)]
+        public string loreText = "Dernières notes de grand-père, il y a exactement 1 an, le jour de sa disparition, alors qu'il était parti jeter un coup d'oeil dans son télescope : \"J'adorais la légende du télescope, c'était toujours un plaisir de rêver à ce que je pourrais voir à travers. Le vieux Chaman me disait toujours que les plus belles surprises se trouvaient là où on s'y attendait le moins. En suivant sa logique je devrais prendre un télescope pour regarder le sol ... Ce ne sont que des dictons après tout. Ma foi pourquoi ne pas essayer ahah!\"";
         
         public UnityEvent onBookClosed;
 

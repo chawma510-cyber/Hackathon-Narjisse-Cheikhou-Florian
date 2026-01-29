@@ -99,12 +99,12 @@ namespace HackathonVR
         }
 
         // ==========================================
-        // SMOOTH MOVEMENT (Left Joystick)
+        // SMOOTH MOVEMENT (Right Joystick)
         // ==========================================
         private void HandleSmoothMovement()
         {
             Vector2 joystickInput = Vector2.zero;
-            leftController.TryGetFeatureValue(CommonUsages.primary2DAxis, out joystickInput);
+            rightController.TryGetFeatureValue(CommonUsages.primary2DAxis, out joystickInput);
 
             if (joystickInput.magnitude > 0.1f)
             {
@@ -125,14 +125,14 @@ namespace HackathonVR
         }
 
         // ==========================================
-        // SNAP TURN (Right Joystick Left/Right)
+        // SNAP TURN (Left Joystick Left/Right)
         // ==========================================
         private void HandleSnapTurn()
         {
             if (Time.time - lastSnapTurnTime < snapTurnCooldown) return;
 
             Vector2 joystickInput = Vector2.zero;
-            rightController.TryGetFeatureValue(CommonUsages.primary2DAxis, out joystickInput);
+            leftController.TryGetFeatureValue(CommonUsages.primary2DAxis, out joystickInput);
 
             // Snap turn
             if (joystickInput.x < -0.7f && Mathf.Abs(joystickInput.y) < 0.5f)

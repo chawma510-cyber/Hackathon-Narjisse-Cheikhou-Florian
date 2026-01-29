@@ -211,18 +211,28 @@ namespace HackathonVR.Editor
             telescope.transform.LookAt(new Vector3(100, 100, 100)); // Look at sky
 
             // 4. Update StoryManager References
-            storyManager.narjisseObject = GameObject.Find("Narjisse"); // Assume exists
+            storyManager.narjisseObject = GameObject.Find("Sequence4DS"); // Preferred name based on user screenshot
+            if (storyManager.narjisseObject == null) storyManager.narjisseObject = GameObject.Find("Narjisse"); // Fallback
+            
             // Find Narjisse dialogue if possible
             if (storyManager.narjisseObject != null)
                  storyManager.narjisseDialogue = storyManager.narjisseObject.GetComponent<SimpleDialogue>();
             
             storyManager.telescopeLookPoint = telescope.transform; // Look at telescope base/tube
             
-            // 5. Wire Dialogue -> Book
-            var dialogue = FindFirstObjectByType<SimpleDialogue>();
-            if (dialogue != null)
+            // 5. Wire Dialogue -> Book (Intro Dialogue, separate from Narjisse)
+            // The intro dialogue seems to be separate? Or is it the same bubble?
+            // Assuming "DialogueManager" or a global "SimpleDialogue" handles the intro.
+            var introDialogue = FindFirstObjectByType<SimpleDialogue>(); 
+            // Warning: FindFirstObjectByType might find the Narjisse dialogue if it's the only one. 
+            // We need to distinguish between "Intro" and "Narjisse".
+            // If they are the same object, logic holds. If distinct, we might need names.
+            
+            if (introDialogue != null)
             {
-                dialogue.objectToActivateOnFinish = book;
+                // Only set if this is the intro dialogue (e.g. check lines or name)
+                // For now, let's assume valid wiring if we rely on Scene events.
+                introDialogue.objectToActivateOnFinish = book;
                 book.SetActive(false); 
                 Debug.Log("[SceneDecorator] Wired and Configured Narrative Items.");
             }

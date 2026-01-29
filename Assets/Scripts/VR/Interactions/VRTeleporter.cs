@@ -259,8 +259,8 @@ namespace HackathonVR.Interactions
         private void UpdateArc()
         {
             Vector3 startPos = transform.position;
-            // Apply rotation offset to aim forward like pointing with index finger
-            Vector3 forward = Quaternion.Euler(aimRotationOffset) * transform.forward;
+            // Apply rotation offset in LOCAL space - rotate local forward, then transform to world
+            Vector3 forward = transform.TransformDirection(Quaternion.Euler(aimRotationOffset) * Vector3.forward);
             
             // Calculate arc trajectory
             float stepLength = maxDistance / arcSegments;

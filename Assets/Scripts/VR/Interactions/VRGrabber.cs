@@ -73,8 +73,9 @@ namespace HackathonVR.Interactions
         public VRGrabInteractable GrabbedObject => currentlyGrabbed;
         public HandType Hand => handType;
         
-        // Laser direction with rotation offset applied (points forward like index finger)
-        private Vector3 LaserDirection => Quaternion.Euler(laserRotationOffset) * transform.forward;
+        // Laser direction with rotation offset applied in LOCAL space (points forward like index finger)
+        // The offset rotates the local forward vector, then transforms to world space
+        private Vector3 LaserDirection => transform.TransformDirection(Quaternion.Euler(laserRotationOffset) * Vector3.forward);
         
         private void Start()
         {

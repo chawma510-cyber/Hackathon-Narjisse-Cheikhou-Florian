@@ -42,20 +42,19 @@ When you launch VRScene, you get:
 ### VR Scripts
 | Script | Description |
 |--------|-------------|
-| `XRSetup.cs` | Creates XR Rig + decor at runtime (main script) |
 | `VRInitializer.cs` | Manages XR system startup |
+| `VRLocomotion.cs` | **Left Stick**: Move | **Right Stick**: Snap Turn |
 | `HandPresence.cs` | Controller tracking & haptics |
-| `VRLocomotion.cs` | Movement & snap turn |
+| `StoryManager.cs` | Manages narrative flow (Dialogue -> Book -> Event -> Transition) |
 
-### Interaction System (NEW!)
+### Gameplay Scripts
 | Script | Description |
 |--------|-------------|
-| `VRGrabInteractable.cs` | Makes objects grabbable with physics throwing |
-| `VRGrabber.cs` | Allows VR hands to grab objects |
-| `VRSocketInteractor.cs` | Zones where objects can be placed (puzzles!) |
-| `VRPointer.cs` | Laser pointer for distant interactions |
-| `VRButton.cs` | Pressable VR buttons with feedback |
-| `VRInteractionSetup.cs` | Auto-setup utility + test helpers |
+| `Flashlight.cs` | Grabbable flashlight. **Button A** to toggle on/off. |
+| `BookLogic.cs` | Interactive book with pages, typewriter effect, and levitation. |
+| `BookSpawner.cs` | Spawns the book when needed in the story. |
+| `SceneTransitionHole.cs` | Transition logic from Scene 2 to Scene 3 (hole jump). |
+| `DialogueManager.cs` | Simple UI for displaying text at the bottom of the screen. |
 
 ## Troubleshooting
 

@@ -56,7 +56,16 @@ Une séquence narrative complète a été codée :
 
 ---
 
-## 6. Architecture Technique
+## 6. Transition Scène 2 -> Scène 3
+- **Mécanique** : "The Hole" (Le Trou).
+- **Fonctionnement** :
+   - Un trou noir physique dans la Scène 2.
+   - Si le joueur saute dedans (Headset trigger), transition vers la Scène 3 (Abeilles).
+   - **Script** : `SceneTransitionHole.cs` gère le fade au noir et le repositionnement du joueur.
+
+---
+
+## 7. Architecture Technique
 - **`SceneDecorator.cs`** : Outil Editor pour configurer les scènes et spawner les objets (Livre, Télescope) automatiquement.
 - **`StoryManager.cs`** : Chef d'orchestre qui gère la chronologie des événements (Dialogue -> Livre -> Télescope -> Fin).
 - **`VRLocomotion.cs`** : Script centralisé pour la gestion des déplacements sans conflit.

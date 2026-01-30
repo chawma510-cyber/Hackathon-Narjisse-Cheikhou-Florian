@@ -266,6 +266,8 @@ MonoBehaviour:
   createDecor: 0
   enableGrabInteraction: 1
   createGrabbableTestObjects: 1
+  nearClip: 0.01
+  farClip: 1000
 --- !u!54 &800003
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1291,7 +1293,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'COURRE!
+  m_text: 'COURS!
 
     ELLE
 
@@ -1441,7 +1443,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4714110321435424, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.65
+      value: -1.188
       objectReference: {fileID: 0}
     - target: {fileID: 4714110321435424, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1449,7 +1451,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4714110321435424, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 24.08
+      value: 24.882
       objectReference: {fileID: 0}
     - target: {fileID: 4714110321435424, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2785,7 +2787,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1428724344393548, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1065353160}
   m_SourcePrefab: {fileID: 100100000, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
 --- !u!1001 &740131954
 PrefabInstance:
@@ -3190,7 +3195,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &775412099
+--- !u!114 &775412101
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3212,7 +3217,7 @@ MonoBehaviour:
   P08: {fileID: 1832424931}
   P09: {fileID: 1637551169}
   P10: {fileID: 1304819081}
-  vitesse: 6
+  vitesse: 4
   vitesseRotation: 100
   distanceArrivee: 0.1
 --- !u!1 &792205688
@@ -3764,6 +3769,25 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a0ac4c6540ad663468d86b7d6bb07c9d, type: 3}
+--- !u!1 &1065353152 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1428724344393548, guid: 90c9321a66ce29244b6165d7a3f4efb3, type: 3}
+  m_PrefabInstance: {fileID: 729487521}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1065353160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1065353152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25432dbb0c2aa4440958df5cbdaf7a08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dt: 20
+  plugin4ds: {fileID: 0}
 --- !u!1001 &1084386957
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3901,7 +3925,7 @@ PrefabInstance:
       addedObject: {fileID: 775412097}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7c467d8edec4cd047aee9513be6fc382, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 775412099}
+      addedObject: {fileID: 775412101}
     - targetCorrespondingSourceObject: {fileID: -8436141605493000344, guid: 7c467d8edec4cd047aee9513be6fc382, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1178240769}

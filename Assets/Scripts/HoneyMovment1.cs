@@ -26,7 +26,7 @@ public class HoneyMovement : MonoBehaviour
     private IEnumerator SuivreLeParcoursComplet()
     {
         // Attendre 4 secondes au debut
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(48f);
 
         // P01 vers P02
         yield return StartCoroutine(AllerVersPoint(P11));
